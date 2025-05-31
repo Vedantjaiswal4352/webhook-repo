@@ -1,11 +1,16 @@
 from flask import Flask, jsonify, render_template, request
 from pymongo import MongoClient
 from datetime import datetime
+from dotenv import load_dotenv
 import pytz
+import os
+
+load_dotenv()
+Mongo_URI = os.getenv("mongo_login_secret")
 
 app = Flask(__name__)
 
-client = MongoClient("mongodb+srv://YOUR_MONGO_USER:<YOUR_PASSWORD>@cluster0.uf4olsf.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0")
+client = MongoClient(Mongo_URI)
 
 db = client.webhooks # DB name
 events = db.events # Collection name
