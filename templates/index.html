@@ -21,6 +21,7 @@
 </head>
 <body>
   <h2>🔄 Live GitHub Events</h2>
+  <button onclick="clearEvents()" style="margin-bottom: 20px;">Clear All Events</button>
   <div id="events"></div>
 
   <script>
@@ -45,6 +46,18 @@
         div.innerText = text;
         container.appendChild(div);
       });
+    }
+
+    async function clearEvents() {
+        const confirmClear = confirm("Are you sure you want to delete all events?");
+        if(!confirmClear) return;
+
+        const res = await fetch('/clear',{method:"POST"});
+        const result = await res.json();
+        alert(result.messsage);
+
+        fetchEvents();
+        
     }
 
     // Initial load + 15s polling

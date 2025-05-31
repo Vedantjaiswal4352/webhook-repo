@@ -1,6 +1,7 @@
 from flask import Flask, jsonify, render_template, request
 from pymongo import MongoClient
 from datetime import datetime
+import pytz
 
 app = Flask(__name__)
 
@@ -8,6 +9,13 @@ client = MongoClient("mongodb+srv://flask_user:password4352@cluster0.uf4olsf.mon
 
 db = client.webhooks # DB name
 events = db.events # Collection name
+
+IST = pytz.timezone('Asia/Kolkata')
+
+def get_ist_time():
+    now_utc = datetime.utcnow()
+    now_ist = now_utc.replace(tzinfo=pytz.utc).astimezone(IST)
+    return now_ist.strftime("%d %B %Y - %I:%M %p IST")
 
 @app.route('/')
 def home():
@@ -23,7 +31,7 @@ def webhook():
     if event_type == "push":
         author = data['pusher']['name']
         branch = data['ref'].split('/')[-1]
-        timestamp = datetime.utcnow().strftime("%d %B %Y - %I:%M %p UTC")
+        timestamp = get_ist_time()
 
         events.insert_one({
             "type":"push",
@@ -36,7 +44,7 @@ def webhook():
         author = pr['user']['login']
         from_branch = pr['head']['ref']
         to_branch = pr['base']['ref']
-        timestamp = datetime.utcnow().strftime("%d %B %Y - %I:%M %p UTC")
+        timestamp = get_ist_time()
 
         events.insert_one({
             "type":"pull_request",
@@ -51,6 +59,11 @@ def webhook():
 @app.route('/events',methods=["GET"])
 def get_events():
     return jsonify(list(events.find({},{"_id":0})))
+
+@app.route('/clear',methods=['POST'])
+def clear_events():
+    result = events.delete_many({})
+    return jsonify({"message":f"Deleted{result.deleted_count} events"}),200
 
 if __name__ == '__main__':
     app.run(port=5000,debug=True)
